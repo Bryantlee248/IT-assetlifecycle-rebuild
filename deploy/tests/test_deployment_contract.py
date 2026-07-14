@@ -40,6 +40,22 @@ class DeploymentContractTest(unittest.TestCase):
         self.assertIn("POSTGRES_PASSWORD=replace-with-random-password", template)
         self.assertIn("ITAM_JWT_SECRET=replace-with-random-secret", template)
 
+    def test_backend_uses_spring_boot_redis_property_namespace(self):
+        application = (ROOT / "backend" / "src" / "main" / "resources" / "application.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            "  data:\n"
+            "    redis:\n"
+            "      host: ${ITAM_REDIS_HOST:localhost}\n"
+            "      port: ${ITAM_REDIS_PORT:6379}\n"
+            "      password: ${ITAM_REDIS_PASSWORD:}\n"
+            "      database: ${ITAM_REDIS_DB:0}\n"
+            "      timeout: 3000ms",
+            application,
+        )
+        self.assertNotIn("\n  redis:\n", application)
+
 
 if __name__ == "__main__":
     unittest.main()

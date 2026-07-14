@@ -17,6 +17,7 @@ import javax.sql.DataSource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * 校验 SecurityConfig 中 permitAll 的匿名端点（已去掉 /api 前缀）：
@@ -66,5 +67,11 @@ class SecurityPermitAllTest {
         MvcResult result = mockMvc.perform(get("/api/v1/health").contextPath("/api"))
                 .andReturn();
         assertThat(result.getResponse().getStatus()).isNotEqualTo(401);
+    }
+
+    @Test
+    void health_endpoint_returns_service_unavailable_when_dependencies_are_down() throws Exception {
+        mockMvc.perform(get("/api/v1/health").contextPath("/api"))
+                .andExpect(status().isServiceUnavailable());
     }
 }

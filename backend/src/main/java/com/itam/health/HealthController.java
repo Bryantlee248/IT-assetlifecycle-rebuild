@@ -4,6 +4,8 @@ import com.itam.common.result.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,14 +31,17 @@ public class HealthController {
     }
 
     @GetMapping
-    public ApiResponse<Map<String, String>> health(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> health(HttpServletRequest request) {
         String pg = checkPostgres();
         String redis = checkRedis();
         Map<String, String> status = new LinkedHashMap<>();
         status.put("pg", pg);
         status.put("redis", redis);
         status.put("timestamp", java.time.Instant.now().toString());
-        return ApiResponse.success(status);
+        HttpStatus httpStatus = "UP".equals(pg) && "UP".equals(redis)
+                ? HttpStatus.OK
+                : HttpStatus.SERVICE_UNAVAILABLE;
+        return ResponseEntity.status(httpStatus).body(ApiResponse.success(status));
     }
 
     private String checkPostgres() {
