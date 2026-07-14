@@ -56,6 +56,16 @@ class DeploymentContractTest(unittest.TestCase):
         )
         self.assertNotIn("\n  redis:\n", application)
 
+    def test_operations_files_include_safety_controls(self):
+        backup = (ROOT / "deploy/backup-postgres.sh").read_text(encoding="utf-8")
+        restore = (ROOT / "deploy/restore-postgres.sh").read_text(encoding="utf-8")
+        host_nginx = (ROOT / "deploy/nginx-host.conf").read_text(encoding="utf-8")
+        cron = (ROOT / "deploy/itam-backup.cron").read_text(encoding="utf-8")
+        self.assertIn("-mtime +14 -delete", backup)
+        self.assertIn('CONFIRM_RESTORE must be "yes"', restore)
+        self.assertIn("proxy_pass http://127.0.0.1:3000", host_nginx)
+        self.assertIn("30 2 * * * root", cron)
+
 
 if __name__ == "__main__":
     unittest.main()
