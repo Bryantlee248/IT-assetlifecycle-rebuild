@@ -1,73 +1,77 @@
-# MVP-0 平台底座：本地/演示编排
-# 启动：docker compose up -d --build
-# 后端暴露 8080，前端(可选)暴露 5173；PostgreSQL 5432 / Redis 6379 仅对内网。
-#
-# 说明：
-#  * backend 通过环境变量覆盖 application.yml 默认值（ITAM_DB_URL / ITAM_REDIS_HOST 等）。
-#  * 生产环境务必修改 ITAM_JWT_SECRET 为 >=32 字节的随机串。
-#  * 仅 MVP-0 底座，不含资产/审批等模块。
+name: itam
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
 
 services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_DB: itam
-      POSTGRES_USER: itam
-      POSTGRES_PASSWORD: itam
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - itam-pg:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U itam -d itam"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
     restart: unless-stopped
+    logging: *default-logging
+    networks: [app]
 
   redis:
     image: redis:7
-    ports:
-      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
     restart: unless-stopped
+    logging: *default-logging
+    networks: [app]
 
   backend:
+    image: itam-backend:${ITAM_IMAGE_TAG:-mvp1}
     build: ./backend
+    environment:
+      ITAM_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+      ITAM_DB_USERNAME: ${POSTGRES_USER:?POSTGRES_USER is required}
+      ITAM_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      ITAM_JWT_SECRET: ${ITAM_JWT_SECRET:?ITAM_JWT_SECRET is required}
+      LOGGING_LEVEL_COM_ITAM: INFO
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: never
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    environment:
-      ITAM_DB_URL: jdbc:postgresql://postgres:5432/itam
-      ITAM_DB_USERNAME: itam
-      ITAM_DB_PASSWORD: itam
-      ITAM_REDIS_HOST: redis
-      ITAM_REDIS_PORT: "6379"
-      # 生产请替换为强随机串（>=32 字节）
-      ITAM_JWT_SECRET: "changeme-please-use-a-strong-random-secret-at-least-32-bytes"
-    ports:
-      - "8080:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/v1/health || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
     restart: unless-stopped
+    logging: *default-logging
+    networks: [app]
 
-  # 可选：前端（需 frontend 目录已完成构建，见 frontend/Dockerfile）
-  # frontend:
-  #   build: ./frontend
-  #   depends_on:
-  #     - backend
-  #   ports:
-  #     - "5173:80"
-  #   restart: unless-stopped
+  frontend:
+    image: itam-frontend:${ITAM_IMAGE_TAG:-mvp1}
+    build: ./frontend
+    ports:
+      - "127.0.0.1:${ITAM_PUBLIC_PORT:?ITAM_PUBLIC_PORT is required}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [app]
+
+networks:
+  app:
 
 volumes:
   itam-pg:
