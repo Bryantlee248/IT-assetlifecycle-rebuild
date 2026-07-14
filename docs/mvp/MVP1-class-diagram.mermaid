@@ -1,0 +1,161 @@
+classDiagram
+    %% ===== 实体 =====
+    class AssetType {
+        +UUID id
+        +UUID tenantId
+        +UUID parentId
+        +String typeCode
+        +String typeName
+        +String assetKind
+        +UUID lifecycleTemplateId
+        +String icon
+        +boolean enabled
+        +int sortOrder
+        +findByTenantIdOrderBySortAsc()
+    }
+    class FieldDefinition {
+        +UUID id
+        +UUID tenantId
+        +UUID assetTypeId
+        +String fieldCode
+        +String fieldName
+        +String fieldType
+        +String storageType
+        +String physicalColumn
+        +boolean required
+        +String uniqueScope
+        +boolean sensitive
+        +boolean encrypted
+        +String maskRule
+        +boolean visible
+        +boolean editable
+        +String status
+    }
+    class FormSchema {
+        +UUID id
+        +UUID tenantId
+        +UUID assetTypeId
+        +Map schemaJson
+        +int version
+    }
+    class ListViewSchema {
+        +UUID id +UUID tenantId +UUID assetTypeId
+        +Map schemaJson
+    }
+    class SearchSchema {
+        +UUID id +UUID tenantId +UUID assetTypeId
+        +Map schemaJson
+    }
+    class Asset {
+        +UUID id +UUID tenantId
+        +String assetNo +String assetName
+        +String assetKind +UUID assetTypeId
+        +String lifecycleStatus
+        +UUID ownerUserId +UUID ownerOrgId
+        +UUID locationId +UUID costCenterId
+        +UUID responsibleUserId
+        +String serialNo +String brand +String model
+        +String vendor
+        +LocalDate warrantyEndDate +LocalDate licenseEndDate
+        +String sourceType +String syncSource
+        +int metadataVersion +String status
+        +Map~String,Object~ attributes
+        +setLifecycleStatus(String)
+    }
+    class AssetRelation {
+        +UUID id +UUID tenantId
+        +UUID sourceAssetId +UUID targetAssetId
+        +String relationType +String description
+    }
+    class Location {
+        +UUID id +UUID tenantId +UUID parentId
+        +String name +String code +String path +int sortOrder
+    }
+    class FieldPermissionRule {
+        +UUID id +UUID tenantId +UUID roleId
+        +UUID assetTypeId +String fieldCode
+        +boolean visible +boolean editable
+        +boolean masked +boolean exportable +String maskRule
+    }
+    %% ===== 服务 =====
+    class AssetTypeAppService {
+        +AssetTypeNode tree()
+        +create(CreateAssetTypeRequest) AssetTypeResponse
+        +update(UUID, UpdateAssetTypeRequest)
+        +setStatus(UUID, boolean)
+    }
+    class FieldAppService {
+        +createField(UUID, CreateFieldRequest)
+        +updateField(UUID, UpdateFieldRequest)
+        +setFieldStatus(UUID, boolean)
+    }
+    class SchemaAppService {
+        +getFormSchema(UUID) / putFormSchema(UUID, Map)
+        +getListView(...) / putListView(...)
+        +getSearchSchema(...) / putSearchSchema(...)
+    }
+    class RuntimeMetadataService {
+        +aggregate(UUID typeId, UUID roleId) RuntimeMetadataResponse
+    }
+    class FieldPermissionService {
+        +resolve(tenantId, roleId, assetTypeId, fieldCode) FieldPermissionView
+    }
+    class UniqueScopeValidator {
+        +validate(FieldDefinition) : throws 422 if non-hotspot+unique
+    }
+    class DynamicIndexService {
+        +ensurePartialUniqueIndex(fieldCode, col, scope)
+    }
+    class AssetAppService {
+        +create(CreateAssetRequest) AssetResponse
+        +update(UUID, UpdateAssetRequest)
+        +get(UUID) AssetResponse
+        +list(Query) PageResult~AssetListItem~
+        +delete(UUID)
+    }
+    class AssetFieldMappingService {
+        +split(typeId, Map values) : PhysicalFields + attributes
+        +assemble(Asset) : Map allFields
+    }
+    class AssetAssembler {
+        +toResponse(Asset, FieldPermissionView[])
+    }
+    class AssetRelationAppService {
+        +list(UUID) List~AssetRelationDto~
+        +create(UUID, CreateRelationRequest)
+        +delete(UUID, UUID)
+    }
+    %% ===== 基础设施 =====
+    class MetadataController
+    class AssetController
+    class AuditLogService {
+        +log(action, bizType, bizId, detail)
+    }
+    class TenantContext {
+        +getCurrentTenantId() UUID
+        +getCurrentUserId() UUID
+    }
+
+    AssetType "1" *-- "0..*" FieldDefinition : assetTypeId
+    AssetType "1" *-- "0..1" FormSchema
+    AssetType "1" *-- "0..1" ListViewSchema
+    AssetType "1" *-- "0..1" SearchSchema
+    Asset "1" *-- "0..*" AssetRelation : sourceAssetId
+    AssetType "1" *-- "0..*" Asset : assetTypeId
+    Location "1" *-- "0..*" Location : parentId
+
+    MetadataController ..> AssetTypeAppService
+    MetadataController ..> FieldAppService
+    MetadataController ..> SchemaAppService
+    MetadataController ..> RuntimeMetadataService
+    FieldAppService ..> UniqueScopeValidator
+    FieldAppService ..> DynamicIndexService
+    RuntimeMetadataService ..> FieldPermissionService
+    AssetController ..> AssetAppService
+    AssetController ..> AssetRelationAppService
+    AssetAppService ..> AssetFieldMappingService
+    AssetAppService ..> AssetAssembler
+    AssetAssembler ..> FieldPermissionService
+    AssetAppService ..> AuditLogService
+    FieldAppService ..> AuditLogService
+    TenantContext <.. AssetAppService : 注入 tenantId

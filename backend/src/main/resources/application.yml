@@ -1,0 +1,71 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: itam
+  datasource:
+    url: ${ITAM_DB_URL:jdbc:postgresql://localhost:5432/itam}
+    username: ${ITAM_DB_USERNAME:itam}
+    password: ${ITAM_DB_PASSWORD:itam}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: true
+  redis:
+    host: ${ITAM_REDIS_HOST:localhost}
+    port: ${ITAM_REDIS_PORT:6379}
+    password: ${ITAM_REDIS_PASSWORD:}
+    database: ${ITAM_REDIS_DB:0}
+    timeout: 3000ms
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    encoding: UTF-8
+    validate-on-migrate: true
+
+itam:
+  jwt:
+    secret: ${ITAM_JWT_SECRET:ZmQ3Y2Y0ZjctY2UxZi00Y2IxLTkzYjctNzY0ZjY0NzQwMzEyZmIzY2Q5}
+    access-token-ttl-minutes: 15
+    refresh-token-ttl-days: 7
+  security:
+    bcrypt-strength: 10
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  api-docs:
+    path: /v3/api-docs
+  groups:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+  health:
+    redis:
+      enabled: true
+    db:
+      enabled: true
+
+logging:
+  level:
+    com.itam: DEBUG
+    org.springframework.security: INFO

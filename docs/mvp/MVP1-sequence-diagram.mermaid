@@ -1,0 +1,86 @@
+%% ===== 场景 A：创建服务器资产（物理列 + attributes + 固定 planned + 审计） =====
+sequenceDiagram
+    participant C as 前端
+    participant AC as AssetController
+    participant AS as AssetAppService
+    participant TC as TenantContext
+    participant MAP as AssetFieldMappingService
+    participant UV as AssetUniqueValidator
+    participant REP as AssetRepository
+    participant AUD as AuditLogService
+
+    C->>AC: POST /api/v1/assets (CreateAssetRequest)
+    AC->>AS: create(req)
+    AS->>TC: getCurrentTenantId() / getCurrentUserId()
+    AS->>MAP: split(assetTypeId, req.physical+req.attributes)
+    MAP-->>AS: 物理列值 + attributes JSONB（按热点白名单拆分）
+    AS->>UV: preCheck(tenantId, assetNo, serialNo)
+    UV->>REP: existsByTenantIdAndAssetNo / existsByTenantIdAndSerialNo
+    alt 已存在
+        REP-->>UV: true
+        UV-->>AS: throw ASSET_NO_CONFLICT(40901)/SERIAL_NO_CONFLICT(40902)
+    else 不存在
+        AS->>AS: asset.setLifecycleStatus("planned")  %% 忽略 req.lifecycleStatus
+        AS->>AS: asset.setTenantId(tenantId); set createdBy/updatedBy
+        AS->>REP: save(asset)  %% 部分唯一索引兜底 409
+        REP-->>AS: Asset
+        AS->>AUD: log("ASSET_CREATE","ASSET",id, detailMap)
+        AS->>AS: assembler.toResponse + FieldPermissionService 过滤
+        AS-->>AC: ApiResponse<AssetResponse>(code=0)
+        AC-->>C: 201/200 + 数据
+    end
+
+%% ===== 场景 B：查询资产列表（带字段权限过滤） =====
+sequenceDiagram
+    participant C as 前端
+    participant AC as AssetController
+    participant AS as AssetAppService
+    participant TC as TenantContext
+    participant REP as AssetRepository
+    participant FPR as FieldPermissionService
+    participant ASS as AssetAssembler
+
+    C->>AC: GET /api/v1/assets?page&size&assetTypeId&status&keyword
+    AC->>AS: list(query)
+    AS->>TC: getCurrentTenantId() / principal.roles
+    AS->>REP: findByTenantId + 等值/模糊/范围/多值 Specification + Pageable
+    REP-->>AS: Page<Asset>
+    loop 每个 Asset
+        AS->>FPR: resolve(tenantId, roleId, assetTypeId, fieldCode) 每字段
+        FPR-->>AS: {visible, editable, masked, exportable}
+        AS->>ASS: toListItem(asset, permissions)
+        ASS-->>AS: 剔除不可见列 / 敏感列按 maskRule 脱敏
+    end
+    AS-->>AC: ApiResponse<PageResult<AssetListItem>> (page,size,total,list)
+    AC-->>C: 列表（无权限列已剔除/脱敏）
+
+%% ===== 场景 C：保存字段定义 + 唯一性校验（非热点拒绝 422） =====
+sequenceDiagram
+    participant C as 前端
+    participant MC as MetadataController
+    participant FS as FieldAppService
+    participant REP as FieldDefinitionRepository
+    participant UV as UniqueScopeValidator
+    participant DI as DynamicIndexService
+    participant AUD as AuditLogService
+
+    C->>MC: POST /api/v1/metadata/asset-types/{typeId}/fields (CreateFieldRequest)
+    MC->>FS: createField(typeId, req)
+    FS->>REP: existsByTenantIdAndAssetTypeIdAndFieldCode
+    alt field_code 重复
+        REP-->>FS: true
+        FS-->>MC: throw FIELD_CODE_CONFLICT(40904)
+    else 不重复
+        FS->>UV: validate(fieldDef)
+        alt uniqueScope!=none 且 storageType!=physical（非热点）
+            UV-->>FS: throw FIELD_UNIQUE_REJECTED(42201)
+            FS-->>MC: 422（提示升格为热点字段）
+        else 热点物理列 + 唯一
+            UV-->>FS: ok
+            FS->>DI: ensurePartialUniqueIndex(fieldCode, col, scope)
+            DI-->>FS: CREATE UNIQUE INDEX IF NOT EXISTS ... WHERE deleted=false
+            FS->>REP: save(fieldDef)
+            FS->>AUD: log("FIELD_CREATE","FIELD",id, detail)
+            FS-->>MC: ApiResponse<FieldDefinitionResponse>(code=0)
+        end
+    end
