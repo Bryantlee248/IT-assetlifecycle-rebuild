@@ -66,6 +66,46 @@ class DeploymentContractTest(unittest.TestCase):
         self.assertIn("proxy_pass http://127.0.0.1:3000", host_nginx)
         self.assertIn("30 2 * * * root", cron)
 
+    def test_backup_script_serializes_private_backups(self):
+        backup = (ROOT / "deploy/backup-postgres.sh").read_text(encoding="utf-8")
+
+        self.assertIn("umask 077", backup)
+        self.assertIn(".backup.lock", backup)
+
+    def test_restore_preflights_and_fails_atomically(self):
+        restore = (ROOT / "deploy/restore-postgres.sh").read_text(encoding="utf-8")
+
+        self.assertIn("pg_restore --list", restore)
+        self.assertLess(restore.index("pg_restore --list"), restore.index("pg_restore --clean"))
+        self.assertIn("--single-transaction", restore)
+        self.assertIn("--exit-on-error", restore)
+
+    def test_host_nginx_overwrites_forwarded_for(self):
+        host_nginx = (ROOT / "deploy/nginx-host.conf").read_text(encoding="utf-8")
+
+        self.assertIn("proxy_set_header X-Forwarded-For $remote_addr;", host_nginx)
+        self.assertNotIn(
+            "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;", host_nginx
+        )
+
+    def test_restore_runbook_stops_and_restarts_app(self):
+        readme = (ROOT / "deploy/README.md").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "docker compose --env-file /opt/itam/.env -f /opt/itam/app/docker-compose.yml "
+            "stop frontend backend",
+            readme,
+        )
+        self.assertIn(
+            "pre_restore_backup=$(/opt/itam/app/deploy/backup-postgres.sh)", readme
+        )
+        self.assertIn('test -s "$pre_restore_backup"', readme)
+        self.assertIn(
+            "docker compose --env-file /opt/itam/.env -f /opt/itam/app/docker-compose.yml "
+            "up -d backend frontend",
+            readme,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

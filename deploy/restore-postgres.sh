@@ -19,5 +19,9 @@ test -s "$backup"
 . "$ENV_FILE"
 
 docker compose --env-file "$ENV_FILE" -f "$APP_DIR/docker-compose.yml" \
+  exec -T postgres pg_restore --list < "$backup" >/dev/null
+
+docker compose --env-file "$ENV_FILE" -f "$APP_DIR/docker-compose.yml" \
   exec -T postgres pg_restore --clean --if-exists --no-owner \
+  --single-transaction --exit-on-error \
   -U "$POSTGRES_USER" -d "$POSTGRES_DB" < "$backup"
