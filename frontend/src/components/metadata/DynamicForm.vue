@@ -44,8 +44,13 @@ function perm(code: string): FieldPermissionView {
   return meta.value?.fieldPermissions?.[code] ?? DENIED
 }
 
-// 仅渲染可见的固定字段。
-const visibleFixedFields = computed(() => FIXED_FIELDS.filter((f) => perm(f.code).visible !== false))
+// 仅渲染可见的固定字段。资产名称/编号已在模板中单独渲染（基础信息区），
+// 此处剔除，避免重复输入（MVP-2 T7d）；表单模型仍保留 assetName/assetNo 键。
+const visibleFixedFields = computed(() =>
+  FIXED_FIELDS.filter(
+    (f) => f.code !== 'asset_name' && f.code !== 'asset_no' && perm(f.code).visible !== false
+  )
+)
 // 动态字段：排除固定列，且仅渲染可见字段。
 const dynamicFields = computed<FieldDefinitionResponse[]>(
   () => (meta.value?.fields ?? []).filter((f) => !FIXED_SET.has(f.fieldCode) && perm(f.fieldCode).visible !== false)

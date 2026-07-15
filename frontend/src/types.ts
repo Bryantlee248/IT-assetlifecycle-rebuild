@@ -478,3 +478,63 @@ export interface CreateRelationRequest {
   relationType: string
   description?: string | null
 }
+
+// ============================================================================
+// MVP-2 生命周期状态机（与《MVP2-接口契约.md》严格对应）
+// ============================================================================
+
+/** 生命周期当前状态 + 模板信息（E1 响应 data） */
+export interface LifecycleStatus {
+  assetId: string
+  templateId: string
+  templateName: string
+  currentState: string
+  currentStateName: string
+  assetKind: string
+}
+
+/** 当前状态下可执行动作（E3 响应 data 数组元素） */
+export interface LifecycleAction {
+  actionCode: string
+  actionName: string
+  toState: string
+  toStateName: string
+  requireApproval: boolean
+  requireAttachment: boolean
+  guardRule: {
+    requireFields?: string[]
+    requireAttributeFields?: string[]
+    requireAttachment?: boolean
+  }
+}
+
+/** 生命周期事件（E2 响应 data 数组元素，按 createdAt 倒序） */
+export interface LifecycleEvent {
+  id: string
+  actionCode: string
+  actionName: string
+  fromState: string
+  toState: string
+  operatorId: string
+  operatorName: string | null
+  reason: string | null
+  formData: Record<string, unknown>
+  attachmentIds: string[]
+  createdAt: string
+}
+
+/** 执行动作请求体（E4 请求体） */
+export interface ExecuteLifecycleActionRequest {
+  reason: string
+  formData?: Record<string, unknown>
+  attachmentIds?: string[]
+}
+
+/** 执行动作结果（E4 响应 data）：transitioned=流转成功；approval_required=需审批（MVP-2 仅占位） */
+export interface LifecycleActionResult {
+  result: 'transitioned' | 'approval_required'
+  fromState: string | null
+  toState: string | null
+  approvalInstanceId: string | null
+  eventId: string | null
+}
