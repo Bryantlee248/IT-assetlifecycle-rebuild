@@ -230,6 +230,51 @@ class SmokeTestHelpersTest(unittest.TestCase):
         self.assertEqual(api.calls[-1][1], "/api/v1/assets/asset-1")
         self.assertEqual(api.responses, [])
 
+    def test_run_asset_crud_retries_cleanup_when_delete_is_not_confirmed(self):
+        state = {}
+
+        def create(method, path, body, token):
+            state["assetNo"] = body["assetNo"]
+            return 200, {"code": 0, "message": "ok", "data": self.asset_data(body["assetNo"])}
+
+        def valid_get(method, path, body, token):
+            return 200, {"code": 0, "message": "ok", "data": self.asset_data(state["assetNo"])}
+
+        def valid_list(method, path, body, token):
+            return 200, {
+                "code": 0,
+                "message": "ok",
+                "data": {"page": 1, "size": 20, "total": 1, "list": [self.asset_data(state["assetNo"])]},
+            }
+
+        def valid_update(method, path, body, token):
+            return 200, {
+                "code": 0,
+                "message": "ok",
+                "data": self.asset_data(state["assetNo"], "Smoke Test Asset Updated"),
+            }
+
+        api = ScriptedApi(
+            [
+                create,
+                valid_get,
+                valid_list,
+                valid_update,
+                (200, {"code": 0, "message": "ok", "data": None}),
+                valid_get,
+                (200, {"code": 0, "message": "ok", "data": None}),
+            ]
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "expected HTTP 404"):
+            run_asset_crud(api, "tenant-token", "type-1")
+
+        self.assertEqual(
+            [call[0] for call in api.calls],
+            ["POST", "GET", "GET", "PUT", "DELETE", "GET", "DELETE"],
+        )
+        self.assertEqual(api.responses, [])
+
     def test_run_asset_crud_rejects_mismatched_created_asset_and_cleans_up(self):
         api = ScriptedApi(
             [

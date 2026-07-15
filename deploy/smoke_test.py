@@ -155,10 +155,10 @@ def run_asset_crud(api, token, asset_type_id):
 
         status, delete_response = api.request("DELETE", f"/api/v1/assets/{asset_id}", token=token)
         expect_http_success(status, delete_response)
-        deleted = True
 
         status, missing_response = api.request("GET", f"/api/v1/assets/{asset_id}", token=token)
         require_deleted(status, missing_response)
+        deleted = True
     finally:
         if asset_id and not deleted:
             try:
