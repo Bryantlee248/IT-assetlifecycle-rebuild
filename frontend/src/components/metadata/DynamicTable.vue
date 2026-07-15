@@ -12,6 +12,10 @@ interface Column {
   label: string
 }
 
+// 固定物理列已在模板中单独渲染（资产编号/名称/类型/生命周期/状态），
+// 此处将其从动态列中剔除，避免重复列（MVP-2 T7c）。
+const DEDUP_FIXED = new Set(['asset_no', 'asset_name', 'lifecycle_status', 'status'])
+
 // 兼容 V4 的 listView.columns（{field,title}）与未来的（{fieldCode,label}）。
 const columns = computed<Column[]>(() => {
   if (!props.meta) return []
@@ -25,11 +29,15 @@ const columns = computed<Column[]>(() => {
         const label = c['title'] ?? c['label'] ?? fields.find((f) => f.fieldCode === code)?.fieldName ?? code
         return { code, label }
       })
-      .filter((c) => c.code && isColumnVisible(c.code))
+      .filter((c) => c.code && isColumnVisible(c.code) && !DEDUP_FIXED.has(c.code))
   }
   // 回退：使用该类型全部可见字段定义。
   return fields
-    .filter((f) => props.meta?.fieldPermissions[f.fieldCode]?.visible !== false)
+    .filter(
+      (f) =>
+        props.meta?.fieldPermissions[f.fieldCode]?.visible !== false &&
+        !DEDUP_FIXED.has(f.fieldCode)
+    )
     .map((f) => ({ code: f.fieldCode, label: f.fieldName }))
 })
 
