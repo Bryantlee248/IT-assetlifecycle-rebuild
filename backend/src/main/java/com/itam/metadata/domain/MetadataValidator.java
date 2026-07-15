@@ -6,12 +6,14 @@ import com.itam.metadata.dto.CreateFieldRequest;
 import com.itam.metadata.dto.UpdateFieldRequest;
 import com.itam.metadata.constants.FieldType;
 import com.itam.metadata.entity.FieldDefinition;
+import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
 /**
  * 元数据校验：字段类型合法性、唯一范围合法性、字段编码不可变性。
  */
+@Component
 public class MetadataValidator {
 
     private static final Set<String> VALID_SCOPES = Set.of("none", "tenant", "asset_type");
