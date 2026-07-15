@@ -114,6 +114,19 @@ class DeploymentContractTest(unittest.TestCase):
             readme,
         )
 
+    def test_live_smoke_commands_read_the_protected_credentials_file(self):
+        plan = (
+            ROOT / "docs" / "superpowers" / "plans" / "2026-07-14-initial-http-deployment.md"
+        ).read_text(encoding="utf-8")
+        live_steps = plan.split("### Task 10:", 1)[1]
+
+        self.assertNotIn("--platform-new-password", live_steps)
+        self.assertNotIn("--tenant-new-password", live_steps)
+        self.assertGreaterEqual(
+            live_steps.count("--credentials-file /root/.config/itam/admin-credentials"),
+            2,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

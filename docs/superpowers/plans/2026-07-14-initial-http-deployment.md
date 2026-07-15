@@ -916,12 +916,10 @@ Expected: both requests succeed through host Nginx.
 - Script: `/opt/itam/app/deploy/smoke_test.py`
 - Credentials: `/root/.config/itam/admin-credentials`
 
-- [ ] **Step 1: Load credentials without printing them**
+- [ ] **Step 1: Verify the protected credentials file**
 
 ```sh
-set -a
-. /root/.config/itam/admin-credentials
-set +a
+test "$(stat -c '%a %U:%G' /root/.config/itam/admin-credentials)" = "600 root:root"
 ```
 
 - [ ] **Step 2: Run the repeatable smoke test**
@@ -929,8 +927,7 @@ set +a
 ```sh
 python3 /opt/itam/app/deploy/smoke_test.py \
   --base-url http://127.0.0.1 \
-  --platform-new-password "$PLATFORM_ADMIN_PASSWORD" \
-  --tenant-new-password "$TENANT_ADMIN_PASSWORD"
+  --credentials-file /root/.config/itam/admin-credentials
 ```
 
 Expected: `Smoke test passed: health, password rotation, login, and asset CRUD`.
@@ -1007,13 +1004,9 @@ timeout 180 sh -c 'until curl -fsS http://127.0.0.1/api/v1/health >/dev/null; do
 - [ ] **Step 2: Re-run the smoke test with rotated credentials**
 
 ```sh
-set -a
-. /root/.config/itam/admin-credentials
-set +a
 python3 /opt/itam/app/deploy/smoke_test.py \
   --base-url http://127.0.0.1 \
-  --platform-new-password "$PLATFORM_ADMIN_PASSWORD" \
-  --tenant-new-password "$TENANT_ADMIN_PASSWORD"
+  --credentials-file /root/.config/itam/admin-credentials
 ```
 
 Expected: smoke test passes after restart, proving database and password persistence.
