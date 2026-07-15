@@ -4,6 +4,7 @@ import com.itam.asset.entity.Asset;
 import com.itam.common.exception.BusinessException;
 import com.itam.common.result.ResultCode;
 import com.itam.lifecycle.dto.ExecuteActionRequest;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,6 +24,7 @@ import java.util.UUID;
  * 处理：先收集全部缺失项（不早退），最后聚合为单条消息抛出
  *       BusinessException(BUSINESS_RULE_VIOLATION, ...)。
  */
+@Component
 public class LifecycleGuardEvaluator {
 
     public GuardResult evaluate(Asset asset, Map<String, Object> guardRule, ExecuteActionRequest req) {

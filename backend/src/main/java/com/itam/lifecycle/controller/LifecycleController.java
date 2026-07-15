@@ -40,29 +40,29 @@ public class LifecycleController {
     @GetMapping
     @PreAuthorize("principal.userType.name() == 'TENANT' and hasAuthority('lifecycle:view')")
     public ApiResponse<LifecycleStatusResponse> getStatus(@AuthenticationPrincipal JwtUserPrincipal principal,
-                                                          @PathVariable UUID assetId) {
+                                                          @PathVariable("assetId") UUID assetId) {
         return ApiResponse.success(lifecycleAppService.getStatus(principal.getTenantId(), assetId));
     }
 
     @GetMapping("/events")
     @PreAuthorize("principal.userType.name() == 'TENANT' and hasAuthority('lifecycle:view')")
     public ApiResponse<List<LifecycleEventResponse>> getEvents(@AuthenticationPrincipal JwtUserPrincipal principal,
-                                                               @PathVariable UUID assetId) {
+                                                               @PathVariable("assetId") UUID assetId) {
         return ApiResponse.success(lifecycleAppService.getEvents(principal.getTenantId(), assetId));
     }
 
     @GetMapping("/actions")
     @PreAuthorize("principal.userType.name() == 'TENANT' and hasAuthority('lifecycle:view')")
     public ApiResponse<List<LifecycleActionResponse>> getActions(@AuthenticationPrincipal JwtUserPrincipal principal,
-                                                                 @PathVariable UUID assetId) {
+                                                                 @PathVariable("assetId") UUID assetId) {
         return ApiResponse.success(lifecycleAppService.getActions(principal.getTenantId(), assetId));
     }
 
     @PostMapping("/actions/{actionCode}")
     @PreAuthorize("principal.userType.name() == 'TENANT' and hasAuthority('lifecycle:transition')")
     public ApiResponse<LifecycleActionResult> executeAction(@AuthenticationPrincipal JwtUserPrincipal principal,
-                                                            @PathVariable UUID assetId,
-                                                            @PathVariable String actionCode,
+                                                            @PathVariable("assetId") UUID assetId,
+                                                            @PathVariable("actionCode") String actionCode,
                                                             @RequestBody ExecuteActionRequest req) {
         return ApiResponse.success(lifecycleAppService.executeAction(
                 principal.getTenantId(), principal.getUserId(), principal.getDisplayName(),

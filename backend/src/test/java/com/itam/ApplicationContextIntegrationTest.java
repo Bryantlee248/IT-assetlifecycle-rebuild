@@ -1,6 +1,7 @@
 package com.itam;
 
 import com.itam.metadata.application.FieldAppService;
+import com.itam.lifecycle.domain.LifecycleGuardEvaluator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,8 +34,16 @@ class ApplicationContextIntegrationTest {
     @Autowired
     private FieldAppService fieldAppService;
 
+    @Autowired
+    private LifecycleGuardEvaluator lifecycleGuardEvaluator;
+
     @Test
     void starts_with_metadata_field_service_registered() {
         assertThat(fieldAppService).isNotNull();
+    }
+
+    @Test
+    void starts_with_lifecycle_guard_evaluator_registered() {
+        assertThat(lifecycleGuardEvaluator).isNotNull();
     }
 }

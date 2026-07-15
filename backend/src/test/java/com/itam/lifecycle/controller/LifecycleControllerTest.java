@@ -22,11 +22,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.PathVariable;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -64,6 +68,18 @@ class LifecycleControllerTest {
     private JwtUserPrincipal principal(Set<String> perms) {
         return new JwtUserPrincipal(UUID.randomUUID(), "u", "U", UserType.TENANT, tenantId, UUID.randomUUID(),
                 Set.of("asset_admin"), perms, false);
+    }
+
+    @Test
+    void path_variables_declare_names_for_compilation_without_parameter_metadata() {
+        for (Method method : LifecycleController.class.getDeclaredMethods()) {
+            for (Parameter parameter : method.getParameters()) {
+                PathVariable pathVariable = parameter.getAnnotation(PathVariable.class);
+                if (pathVariable != null) {
+                    assertThat(pathVariable.value()).isNotBlank();
+                }
+            }
+        }
     }
 
     @Test
