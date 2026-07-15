@@ -56,6 +56,23 @@ class DeploymentContractTest(unittest.TestCase):
         )
         self.assertNotIn("\n  redis:\n", application)
 
+    def test_role_permission_seed_casts_role_ids_to_uuid(self):
+        migration = (
+            ROOT
+            / "backend"
+            / "src"
+            / "main"
+            / "resources"
+            / "db"
+            / "migration"
+            / "V4__metadata_asset_seed.sql"
+        ).read_text(encoding="utf-8")
+        role_permissions = migration.split("INSERT INTO role_permission", 1)[1].split(
+            "ON CONFLICT", 1
+        )[0]
+
+        self.assertIn("v.role_id::uuid", role_permissions)
+
     def test_operations_files_include_safety_controls(self):
         backup = (ROOT / "deploy/backup-postgres.sh").read_text(encoding="utf-8")
         restore = (ROOT / "deploy/restore-postgres.sh").read_text(encoding="utf-8")

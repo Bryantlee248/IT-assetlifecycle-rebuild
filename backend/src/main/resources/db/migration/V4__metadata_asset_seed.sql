@@ -57,7 +57,7 @@ ON CONFLICT (id) DO NOTHING;
 -- -----------------------------------------------------------------------------
 INSERT INTO role_permission (created_at, updated_at, created_by, updated_by, deleted, tenant_id, role_id, permission_code)
 SELECT now(), now(), 'a1111111-1111-1111-1111-111111111111', 'a1111111-1111-1111-1111-111111111111', false,
-       'b2222222-2222-2222-2222-222222222222', v.role_id, v.code
+       'b2222222-2222-2222-2222-222222222222', v.role_id::uuid, v.code
 FROM (VALUES
     ('d4444444-4444-4444-4444-444444444444', 'metadata:manage'),
     ('d4444444-4444-4444-4444-444444444444', 'asset:view'),
