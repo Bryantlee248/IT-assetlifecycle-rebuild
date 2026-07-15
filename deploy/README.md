@@ -28,6 +28,7 @@ Select the backup to restore, stop public traffic, take a pre-restore backup, re
 restart the application:
 
 ```sh
+set -eu
 backup=$(ls -1t /opt/itam/backups/itam-*.dump | head -1)
 docker compose --env-file /opt/itam/.env -f /opt/itam/app/docker-compose.yml stop frontend backend
 pre_restore_backup=$(/opt/itam/app/deploy/backup-postgres.sh)

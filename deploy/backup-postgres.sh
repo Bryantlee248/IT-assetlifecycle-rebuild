@@ -11,9 +11,10 @@ test -r "$ENV_FILE"
 mkdir -p "$BACKUP_DIR"
 chmod 700 "$BACKUP_DIR"
 
-lock_dir="$BACKUP_DIR/.backup.lock"
+lock_file="$BACKUP_DIR/.backup.lock"
 temporary=
-if ! mkdir "$lock_dir" 2>/dev/null; then
+exec 9>"$lock_file"
+if ! flock -n 9; then
   echo "Backup already in progress" >&2
   exit 1
 fi
@@ -22,7 +23,6 @@ cleanup() {
   if [ -n "$temporary" ]; then
     rm -f "$temporary" || true
   fi
-  rmdir "$lock_dir" 2>/dev/null || true
 }
 trap cleanup 0
 trap 'exit 1' HUP INT TERM

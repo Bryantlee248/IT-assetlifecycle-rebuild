@@ -71,6 +71,10 @@ class DeploymentContractTest(unittest.TestCase):
 
         self.assertIn("umask 077", backup)
         self.assertIn(".backup.lock", backup)
+        self.assertIn("exec 9>", backup)
+        self.assertIn("flock -n 9", backup)
+        self.assertNotIn('mkdir "$lock_dir"', backup)
+        self.assertNotIn("rmdir", backup)
 
     def test_restore_preflights_and_fails_atomically(self):
         restore = (ROOT / "deploy/restore-postgres.sh").read_text(encoding="utf-8")
@@ -91,6 +95,10 @@ class DeploymentContractTest(unittest.TestCase):
     def test_restore_runbook_stops_and_restarts_app(self):
         readme = (ROOT / "deploy/README.md").read_text(encoding="utf-8")
 
+        self.assertIn(
+            "```sh\nset -eu\nbackup=$(ls -1t /opt/itam/backups/itam-*.dump | head -1)",
+            readme,
+        )
         self.assertIn(
             "docker compose --env-file /opt/itam/.env -f /opt/itam/app/docker-compose.yml "
             "stop frontend backend",
