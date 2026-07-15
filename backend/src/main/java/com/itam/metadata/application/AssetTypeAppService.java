@@ -30,7 +30,7 @@ public class AssetTypeAppService {
     private final AuditLogService auditLogService;
 
     public List<AssetTypeNode> tree(UUID tenantId) {
-        List<AssetType> all = assetTypeRepository.findByTenantIdOrderBySortAsc(tenantId);
+        List<AssetType> all = assetTypeRepository.findByTenantIdOrderBySortOrderAsc(tenantId);
         Map<UUID, List<AssetType>> childrenMap = new LinkedHashMap<>();
         List<AssetType> roots = new ArrayList<>();
         for (AssetType t : all) {

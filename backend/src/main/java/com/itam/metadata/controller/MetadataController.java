@@ -186,7 +186,7 @@ public class MetadataController {
     }
 
     private List<LocationNode> buildLocationTree(UUID tenantId) {
-        List<Location> all = locationRepository.findByTenantIdOrderBySortAsc(tenantId);
+        List<Location> all = locationRepository.findByTenantIdOrderBySortOrderAsc(tenantId);
         Map<UUID, List<Location>> childrenMap = new LinkedHashMap<>();
         List<Location> roots = new ArrayList<>();
         for (Location loc : all) {

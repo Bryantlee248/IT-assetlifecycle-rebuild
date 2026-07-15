@@ -73,6 +73,15 @@ class DeploymentContractTest(unittest.TestCase):
 
         self.assertIn("v.role_id::uuid", role_permissions)
 
+    def test_metadata_tree_repositories_sort_by_entity_sort_order(self):
+        for relative in (
+            "backend/src/main/java/com/itam/metadata/repository/AssetTypeRepository.java",
+            "backend/src/main/java/com/itam/metadata/repository/LocationRepository.java",
+        ):
+            repository = (ROOT / relative).read_text(encoding="utf-8")
+            self.assertIn("OrderBySortOrderAsc", repository, relative)
+            self.assertNotIn("OrderBySortAsc", repository, relative)
+
     def test_operations_files_include_safety_controls(self):
         backup = (ROOT / "deploy/backup-postgres.sh").read_text(encoding="utf-8")
         restore = (ROOT / "deploy/restore-postgres.sh").read_text(encoding="utf-8")

@@ -15,9 +15,9 @@ import java.util.UUID;
 @Repository
 public interface AssetTypeRepository extends JpaRepository<AssetType, UUID> {
 
-    List<AssetType> findByTenantIdOrderBySortAsc(UUID tenantId);
+    List<AssetType> findByTenantIdOrderBySortOrderAsc(UUID tenantId);
 
-    List<AssetType> findByTenantIdAndParentIdOrderBySortAsc(UUID tenantId, UUID parentId);
+    List<AssetType> findByTenantIdAndParentIdOrderBySortOrderAsc(UUID tenantId, UUID parentId);
 
     Optional<AssetType> findByTenantIdAndId(UUID tenantId, UUID id);
 

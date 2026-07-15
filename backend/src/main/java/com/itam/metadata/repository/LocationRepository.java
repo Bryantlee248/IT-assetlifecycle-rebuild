@@ -14,9 +14,9 @@ import java.util.UUID;
 @Repository
 public interface LocationRepository extends JpaRepository<Location, UUID> {
 
-    List<Location> findByTenantIdOrderBySortAsc(UUID tenantId);
+    List<Location> findByTenantIdOrderBySortOrderAsc(UUID tenantId);
 
-    List<Location> findByTenantIdAndParentIdOrderBySortAsc(UUID tenantId, UUID parentId);
+    List<Location> findByTenantIdAndParentIdOrderBySortOrderAsc(UUID tenantId, UUID parentId);
 
     Optional<Location> findByTenantIdAndId(UUID tenantId, UUID id);
 }
