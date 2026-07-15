@@ -1,0 +1,28 @@
+# 生产 profile 配置
+# 仅覆盖与 application.yml（开发默认值）不同的项。
+# 由 SPRING_PROFILES_ACTIVE=prod 自动加载，叠加在 application.yml 之上。
+#
+# 注意：datasource / redis / flyway 沿用 application.yml 中的 ${...} 占位符，
+#       由 docker-compose.yml 通过环境变量注入，这里不重复声明。
+#
+# 安全约束：itam.jwt.secret 不带默认值，强制要求 ITAM_JWT_SECRET 环境变量注入
+#           >=32 字节的随机串；缺失则 Spring 占位符解析失败、应用启动失败（预期行为）。
+
+logging:
+  level:
+    com.itam: INFO
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+management:
+  endpoint:
+    health:
+      show-details: when-authorized
+
+itam:
+  jwt:
+    secret: ${ITAM_JWT_SECRET}
