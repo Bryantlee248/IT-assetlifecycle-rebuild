@@ -82,6 +82,13 @@ class DeploymentContractTest(unittest.TestCase):
             self.assertIn("OrderBySortOrderAsc", repository, relative)
             self.assertNotIn("OrderBySortAsc", repository, relative)
 
+    def test_role_repository_has_no_unbound_tenant_query(self):
+        repository = (
+            ROOT / "backend/src/main/java/com/itam/tenantadmin/RoleRepository.java"
+        ).read_text(encoding="utf-8")
+
+        self.assertNotIn("findByTenantId(Pageable pageable)", repository)
+
     def test_operations_files_include_safety_controls(self):
         backup = (ROOT / "deploy/backup-postgres.sh").read_text(encoding="utf-8")
         restore = (ROOT / "deploy/restore-postgres.sh").read_text(encoding="utf-8")
