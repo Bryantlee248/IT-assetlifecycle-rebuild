@@ -227,6 +227,13 @@ public class AuthService {
             );
             nodes.add(new MenuNode("asset-group", "资产管理", "", "Goods", assetChildren));
         }
+        // MVP-3：审批与通知（门禁 approval:view / notification:view）
+        if (perms.contains("approval:view")) {
+            nodes.add(new MenuNode("approval-todo", "审批待办", "/approvals/tasks", "Tickets", List.of()));
+        }
+        if (perms.contains("notification:view")) {
+            nodes.add(new MenuNode("notification-list", "通知中心", "/notifications/list", "Bell", List.of()));
+        }
         nodes.add(new MenuNode("profile", "个人中心", "/profile", "Setting", List.of()));
         return nodes;
     }

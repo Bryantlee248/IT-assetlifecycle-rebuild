@@ -45,6 +45,9 @@ public class LifecycleTransition extends TenantEntity {
     @Column(name = "require_approval", nullable = false)
     private boolean requireApproval = false;
 
+    @Column(name = "approval_template_id", columnDefinition = "uuid")
+    private UUID approvalTemplateId;
+
     @Column(name = "require_attachment", nullable = false)
     private boolean requireAttachment = false;
 

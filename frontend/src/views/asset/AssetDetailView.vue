@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElButton, ElIcon, ElMessage, ElTag } from 'element-plus'
+import { ElAlert, ElButton, ElIcon, ElMessage, ElTag } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Lock } from '@element-plus/icons-vue'
 import { getAsset } from '../../api/asset'
@@ -42,6 +42,8 @@ const eventView = useViewState()
 
 const lifecycle = ref<LifecycleStatus | null>(null)
 const actions = ref<LifecycleAction[]>([])
+// 需审批动作提交后回填的审批实例 ID（仅展示，不刷新资产状态）
+const submittedApprovalId = ref<string | null>(null)
 const events = ref<LifecycleEvent[]>([])
 
 const canTransition = computed(() => userStore.hasPermission('lifecycle:transition'))
@@ -132,6 +134,7 @@ const actionRules: FormRules = {
 function openAction(a: LifecycleAction) {
   pendingAction.value = a
   actionForm.value = { reason: '' }
+  submittedApprovalId.value = null
   actionDialogVisible.value = true
 }
 
@@ -164,8 +167,9 @@ async function confirmAction() {
         asset.value!.lifecycleStatus = res.toState
       }
     } else if (res.result === 'approval_required') {
-      // 不伪造审批实例，仅提示：审批模块将在 MVP-3 实现
-      ElMessage.info('该动作需要审批，审批模块将在 MVP-3 实现')
+      // 需审批：已创建审批实例，资产状态不变、不写事件；展示审批单号，不刷新状态。
+      submittedApprovalId.value = res.approvalInstanceId
+      ElMessage.success('已提交审批，等待审批人处理')
     }
   } catch (e: unknown) {
     // 拦截器已 ElMessage.error 过；此处再展示 422 守卫 / 409 冲突等细节
@@ -284,6 +288,28 @@ onMounted(load)
             </div>
           </StateView>
         </el-card>
+
+        <el-alert
+          v-if="submittedApprovalId"
+          class="block"
+          type="success"
+          show-icon
+          :closable="true"
+          title="已提交审批，等待审批人处理（资产状态未变更）"
+          @close="submittedApprovalId = null"
+        >
+          <template #default>
+            <span class="approve-hint">审批单号：{{ submittedApprovalId }}</span>
+            <el-button
+              link
+              type="primary"
+              size="small"
+              @click="router.push(`/approval/instances/${submittedApprovalId}`)"
+            >
+              查看审批
+            </el-button>
+          </template>
+        </el-alert>
 
         <!-- 生命周期事件时间线区 -->
         <el-card shadow="never" class="block">
