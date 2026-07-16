@@ -106,4 +106,15 @@ class StatePermissionServiceTest {
                 service.filterActions(tenantId, Set.of(roleId), assetTypeId, state,
                         List.of("deploy", "dispose")));
     }
+
+    @Test
+    void ruleWithNullAssetType_matchesAnyAssetType() {
+        // 规则 asset_type_id 为空 -> 对任一资产类型生效（全类型放行集合内的动作）。
+        when(ruleRepository.findByTenantIdAndDeletedFalse(tenantId)).thenReturn(
+                List.of(rule(roleId, null, state, List.of("deploy", "retire"))));
+
+        // 当前资产为具体 assetTypeId（非 null），但规则对全类型生效，故 deploy 放行、dispose 拦截。
+        assertTrue(service.isActionAllowed(tenantId, Set.of(roleId), assetTypeId, state, "deploy"));
+        assertFalse(service.isActionAllowed(tenantId, Set.of(roleId), assetTypeId, state, "dispose"));
+    }
 }

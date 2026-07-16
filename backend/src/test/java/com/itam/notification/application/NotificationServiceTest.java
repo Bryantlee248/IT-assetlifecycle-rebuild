@@ -132,4 +132,27 @@ class NotificationServiceTest {
         assertEquals(ResultCode.ASSET_NOT_FOUND, ex.getResultCode());
         verify(notificationRepository, never()).save(any());
     }
+
+    // ============================ 标记已读后未读减少（团队主理人复核点 ①-4） ============================
+    // 既有 markRead_successMarksRead 仅验证"调用了 markRead"；此处真正验证"标记已读后未读数下降"这一契约。
+
+    @Test
+    void unreadCount_decreasesAfterMarkRead() {
+        // 模拟：标记前未读 2 条，标记 1 条已读后剩 1 条。
+        when(notificationRepository.countByTenantIdAndReceiverIdAndReadAtIsNullAndDeletedFalse(any(), any()))
+                .thenReturn(2L, 1L);
+        when(notificationRepository.markRead(any(), any(), any())).thenReturn(1);
+
+        assertEquals(2L, service.unreadCount(tenantId, receiverId));
+        service.markRead(tenantId, receiverId, businessId);
+        assertEquals(1L, service.unreadCount(tenantId, receiverId));
+
+        verify(notificationRepository).markRead(eq(tenantId), eq(receiverId), eq(businessId));
+    }
+
+    @Test
+    void markAllRead_delegatesToRepository() {
+        service.markAllRead(tenantId, receiverId);
+        verify(notificationRepository).markAllRead(eq(tenantId), eq(receiverId));
+    }
 }
