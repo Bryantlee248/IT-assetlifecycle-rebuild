@@ -23,4 +23,8 @@ public interface TenantUserRepository extends JpaRepository<TenantUser, UUID> {
     Page<TenantUser> findByTenantId(UUID tenantId, Pageable pageable);
 
     boolean existsByTenantIdAndPlatformUserId(UUID tenantId, UUID platformUserId);
+
+    /** 按角色 + 状态解析租户成员（审批 ROLE 扇出用）。 */
+    List<TenantUser> findByTenantIdAndRoleIdAndStatusAndDeletedFalse(
+            UUID tenantId, UUID roleId, String status);
 }

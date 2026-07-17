@@ -538,3 +538,91 @@ export interface LifecycleActionResult {
   approvalInstanceId: string | null
   eventId: string | null
 }
+
+// ============================================================================
+// MVP-3 审批（approval）+ 通知（notification）
+// ============================================================================
+
+// ===== 审批 =====
+
+/** 审批实例状态（与后端 InstanceStatus 枚举一致） */
+export type InstanceStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+/** 审批任务状态（与后端 TaskStatus 枚举一致） */
+export type TaskStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+/** 审批人来源类型 */
+export type ApproverType = 'USER' | 'ROLE'
+
+/** 审批实例精简摘要（待办列表展示业务上下文用） */
+export interface ApprovalInstanceSummary {
+  id: string
+  title: string
+  assetId: string
+  actionCode: string
+  actionName: string
+  fromState: string
+  toState: string
+  applicantId: string
+  applicantName: string
+  reason: string | null
+  status: InstanceStatus
+}
+
+/** 审批任务（含可决策标记 canDecide） */
+export interface ApprovalTask {
+  id: string
+  instanceId: string
+  nodeOrder: number
+  approverId: string
+  approverName: string | null
+  approverType: ApproverType
+  status: TaskStatus
+  comment: string | null
+  decidedAt: string | null
+  createdAt: string
+  canDecide: boolean
+  instance: ApprovalInstanceSummary | null
+}
+
+/** 审批实例详情（基础信息 + 业务上下文 + 任务历史） */
+export interface ApprovalInstance {
+  id: string
+  title: string
+  assetId: string
+  actionCode: string
+  actionName: string
+  fromState: string
+  toState: string
+  applicantId: string
+  applicantName: string
+  reason: string | null
+  status: InstanceStatus
+  currentNodeOrder: number
+  createdAt: string
+  tasks: ApprovalTask[]
+}
+
+/** 审批决策请求体（approve 的 comment 可选；reject 必填） */
+export interface DecisionRequest {
+  comment?: string
+}
+
+// ===== 通知 =====
+
+/** 通知类型（与后端 NotificationType 枚举一致） */
+export type NotificationType =
+  | 'APPROVAL_TASK'
+  | 'APPROVAL_APPROVED'
+  | 'APPROVAL_REJECTED'
+  | 'APPROVAL_FORWARDED'
+
+/** 站内通知 */
+export interface Notification {
+  id: string
+  type: NotificationType
+  businessType: string | null
+  businessId: string | null
+  title: string
+  content: string | null
+  readAt: string | null
+  createdAt: string
+}

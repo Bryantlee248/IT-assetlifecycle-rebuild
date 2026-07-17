@@ -13,6 +13,7 @@ import {
 import { useUserStore } from '../store/user'
 import { useMenuStore } from '../store/menu'
 import { useTenantStore } from '../store/tenant'
+import NotificationBell from '../components/notification/NotificationBell.vue'
 import type { MenuNode } from '../types'
 
 const route = useRoute()
@@ -132,6 +133,7 @@ async function onSwitchTenant(id: string) {
       <el-header class="layout-header">
         <div class="header-title">{{ route.meta.title || 'IT 资产管理系统' }}</div>
         <div class="header-right">
+          <NotificationBell />
           <el-dropdown
             v-if="canSwitchTenant"
             trigger="click"

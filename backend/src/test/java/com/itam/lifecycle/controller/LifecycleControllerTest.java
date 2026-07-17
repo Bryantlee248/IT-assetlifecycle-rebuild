@@ -118,7 +118,7 @@ class LifecycleControllerTest {
     @Test
     void authenticated_with_view_get_actions_ok() throws Exception {
         UUID assetId = UUID.randomUUID();
-        when(lifecycleAppService.getActions(any(), eq(assetId))).thenReturn(List.of());
+        when(lifecycleAppService.getActions(any(), any(), eq(assetId))).thenReturn(List.of());
         mockMvc.perform(get("/api/v1/assets/{id}/lifecycle/actions", assetId).contextPath("/api")
                         .with(user(principal(Set.of("lifecycle:view")))))
                 .andExpect(status().isOk());
@@ -127,7 +127,7 @@ class LifecycleControllerTest {
     @Test
     void authenticated_with_view_and_transition_post_action_ok() throws Exception {
         UUID assetId = UUID.randomUUID();
-        when(lifecycleAppService.executeAction(any(), any(), any(), any(), eq("deploy"), any(ExecuteActionRequest.class)))
+        when(lifecycleAppService.executeAction(any(), any(), any(), any(), any(), eq("deploy"), any(ExecuteActionRequest.class)))
                 .thenReturn(new LifecycleActionResult("transitioned", "planned", "in_use", null, UUID.randomUUID()));
         mockMvc.perform(post("/api/v1/assets/{id}/lifecycle/actions/deploy", assetId).contextPath("/api")
                         .with(user(principal(Set.of("lifecycle:view", "lifecycle:transition"))))
@@ -136,6 +136,6 @@ class LifecycleControllerTest {
                 .andExpect(status().isOk());
 
         // 证明 JSON body 已正确反序列化为 ExecuteActionRequest（非 400）
-        verify(lifecycleAppService).executeAction(any(), any(), any(), any(), eq("deploy"), any(ExecuteActionRequest.class));
+        verify(lifecycleAppService).executeAction(any(), any(), any(), any(), any(), eq("deploy"), any(ExecuteActionRequest.class));
     }
 }

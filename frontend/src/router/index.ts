@@ -79,6 +79,26 @@ const routes: RouteRecordRaw[] = [
         name: 'asset-edit',
         component: () => import('../views/asset/AssetEditView.vue'),
         meta: { title: '编辑资产', permission: 'asset:update' }
+      },
+      // ===== MVP-3 审批 =====
+      {
+        path: 'approval/tasks',
+        name: 'approval-tasks',
+        component: () => import('../views/approval/ApprovalTodoView.vue'),
+        meta: { title: '审批待办', permission: 'approval:view' }
+      },
+      {
+        path: 'approval/instances/:id',
+        name: 'approval-detail',
+        component: () => import('../views/approval/ApprovalDetailView.vue'),
+        meta: { title: '审批详情', permission: 'approval:view' }
+      },
+      // ===== MVP-3 通知 =====
+      {
+        path: 'notification/list',
+        name: 'notification-list',
+        component: () => import('../views/notification/NotificationListView.vue'),
+        meta: { title: '通知中心', permission: 'notification:view' }
       }
     ]
   },

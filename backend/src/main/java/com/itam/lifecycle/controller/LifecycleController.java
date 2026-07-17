@@ -55,7 +55,8 @@ public class LifecycleController {
     @PreAuthorize("principal.userType.name() == 'TENANT' and hasAuthority('lifecycle:view')")
     public ApiResponse<List<LifecycleActionResponse>> getActions(@AuthenticationPrincipal JwtUserPrincipal principal,
                                                                  @PathVariable UUID assetId) {
-        return ApiResponse.success(lifecycleAppService.getActions(principal.getTenantId(), assetId));
+        return ApiResponse.success(lifecycleAppService.getActions(
+                principal.getTenantId(), principal.getRoles(), assetId));
     }
 
     @PostMapping("/actions/{actionCode}")
@@ -66,6 +67,6 @@ public class LifecycleController {
                                                             @RequestBody ExecuteActionRequest req) {
         return ApiResponse.success(lifecycleAppService.executeAction(
                 principal.getTenantId(), principal.getUserId(), principal.getDisplayName(),
-                assetId, actionCode, req));
+                principal.getRoles(), assetId, actionCode, req));
     }
 }

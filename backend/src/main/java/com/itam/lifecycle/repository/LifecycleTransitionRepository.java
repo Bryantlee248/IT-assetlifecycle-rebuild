@@ -24,4 +24,7 @@ public interface LifecycleTransitionRepository extends JpaRepository<LifecycleTr
     /** 执行校验：按 action_code + from_state 唯一定位未删流转。 */
     Optional<LifecycleTransition> findByTenantIdAndTemplateIdAndActionCodeAndFromStateAndDeletedFalse(
             UUID tenantId, UUID templateId, String actionCode, String fromState);
+
+    /** 按 id 唯一定位未删流转（审批通过回调时取业务上下文）。 */
+    Optional<LifecycleTransition> findByTenantIdAndIdAndDeletedFalse(UUID tenantId, UUID id);
 }

@@ -38,7 +38,13 @@ export const PERMISSION_CATALOG: PermissionMeta[] = [
   { code: 'asset:view', label: '资产-查看', group: '资产管理' },
   { code: 'asset:create', label: '资产-创建', group: '资产管理' },
   { code: 'asset:update', label: '资产-编辑', group: '资产管理' },
-  { code: 'asset:delete', label: '资产-删除', group: '资产管理' }
+  { code: 'asset:delete', label: '资产-删除', group: '资产管理' },
+
+  { code: 'approval:view', label: '审批-查看', group: '审批管理' },
+  { code: 'approval:approve', label: '审批-通过', group: '审批管理' },
+  { code: 'approval:reject', label: '审批-驳回', group: '审批管理' },
+  { code: 'notification:view', label: '通知-查看', group: '通知中心' },
+  { code: 'notification:read', label: '通知-已读', group: '通知中心' }
 ]
 
 export const PERMISSION_GROUPS: string[] = Array.from(
