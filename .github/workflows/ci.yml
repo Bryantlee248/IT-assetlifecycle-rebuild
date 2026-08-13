@@ -40,6 +40,9 @@ jobs:
   compose-config:
     name: Compose Config Check
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_PASSWORD: ci-placeholder
+      ITAM_JWT_SECRET: ci-placeholder
     steps:
       - uses: actions/checkout@v4
       - name: Validate docker-compose.yml
