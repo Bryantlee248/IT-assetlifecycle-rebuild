@@ -20,7 +20,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-itam}
       POSTGRES_USER: ${POSTGRES_USER:-itam}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?ERROR: set POSTGRES_PASSWORD in .env}
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?ERROR: set POSTGRES_PASSWORD in .env}"
     # 不发布宿主机端口，仅对内网可见
     volumes:
       - itam-pg:/var/lib/postgresql/data
@@ -52,11 +52,11 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       ITAM_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-itam}
       ITAM_DB_USERNAME: ${POSTGRES_USER:-itam}
-      ITAM_DB_PASSWORD: ${POSTGRES_PASSWORD:?ERROR: set POSTGRES_PASSWORD in .env}
+      ITAM_DB_PASSWORD: "${POSTGRES_PASSWORD:?ERROR: set POSTGRES_PASSWORD in .env}"
       ITAM_REDIS_HOST: redis
       ITAM_REDIS_PORT: "6379"
       ITAM_REDIS_PASSWORD: ${ITAM_REDIS_PASSWORD:-}
-      ITAM_JWT_SECRET: ${ITAM_JWT_SECRET:?ERROR: set ITAM_JWT_SECRET in .env}
+      ITAM_JWT_SECRET: "${ITAM_JWT_SECRET:?ERROR: set ITAM_JWT_SECRET in .env}"
     # 不发布宿主机端口，仅供 compose 内网访问
     healthcheck:
       test: ["CMD-SHELL", "curl -f -s -o /dev/null http://localhost:8080/api/v1/health || exit 1"]
