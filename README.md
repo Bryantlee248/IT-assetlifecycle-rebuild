@@ -52,7 +52,11 @@ GitHub Actions 自动执行：后端 `mvn test` + 前端 `npm run build` + `dock
 
 ## 文档索引
 
-- `docs/mvp/`：MVP 0-3 设计基线 / 验收报告 / 整改报告
+- `docs/mvp/`：MVP 0-3 设计基线 / 验收报告 / 整改报告 / 开发与整改提示词（md）
 - `docs/mvp3/`：ARCHITECTURE.md + PRD.md
 - `docs/handoff/`、`docs/standards/`：交接与规范
 - `tools/`：提示词文档生成脚本
+
+## 许可证
+
+[MIT](LICENSE) © 2026 Bryantlee248
